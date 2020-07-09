@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+   </head>
+   <body>
+      <div class="container mt-5">
+         <div class="row">
+            <div class="col-4">
+               <form id="MainForm" >
+                  <div id="alert" class="alert" role="alert" style="display: none;"><button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                     <span aria-hidden="true">&times;</span>
+                     </button>
+                  </div>
+                  <div class="input-group mb-3">
+                     <div class="input-group-prepend">
+                        <span class="input-group-text">First name:</span>
+                     </div>
+                     <input type="text" id="fname" class="form-control" pattern="[A-Z]{1}[a-z]{1,}" placeholder="Jonas...">
+                  </div>
+                  <div class="input-group mb-3">
+                     <div class="input-group-prepend">
+                        <span class="input-group-text">Last name:</span>
+                     </div>
+                     <input type="text" id="lname" class="form-control" pattern="[A-Z]{1}[a-z]{1,}" placeholder="Jonaitis...">
+                  </div>
+                  <div class="input-group mb-3">
+                     <div class="input-group-prepend">
+                        <span class="input-group-text">Birthday:</span>
+                     </div>
+                     <input type="date" id="birthday" class="form-control">
+                  </div>
+                  <div class="input-group mb-3">
+                     <div class="input-group-prepend">
+                        <span class="input-group-text">Phone number:</span>
+                     </div>
+                     <input type="tel" id="phone" class="form-control" pattern="[+]{1}[0-9]{1,}" placeholder="+37061234567">
+                  </div>
+                  <div class="input-group mb-3">
+                     <div class="input-group-prepend">
+                        <span class="input-group-text">Email:</span>
+                     </div>
+                     <input type="email" id="email" class="form-control" placeholder="mail@mail.mail">
+                  </div>
+                  <button id="submit_button" type="button" class="btn btn-primary btn-lg btn-block">Submit</button>
+               </form>
+            </div>
+            <div class="col-8">
+               <table id="myTable" class="table table-bordered">
+                  <thead>
+                     <tr>
+                        <th>First name</th>
+                        <th>Last name</th>
+                        <th>Birthday</th>
+                        <th>Phone number</th>
+                        <th>Email</th>
+                        <th></th>
+                     </tr>
+                  </thead>
+                  <tbody id="tbody">
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </div>
+	<script>
+	var tableRef = document.getElementById('myTable');
+	var users = JSON.parse(localStorage.getItem('users'));
+
+	if (localStorage.getItem('users') === null) {
+	    localStorage.setItem('users', JSON.stringify([]));
+	}
+
+	redrawTable();
+
+	function redrawTable() {
+	    document.getElementById('tbody').innerHTML = ""
+	    Object.keys(users).forEach(function(key) {
+	        if (users[key]) {
+	            addToTable(users, key)
+	        }
+	    });
+	}
+
+	function addToTable(users, key) {
+	    
+	    var r = document.createElement('tr');
+	    r.innerHTML = "<td>" + users[key].first_name + "</td>" + "<td>" + users[key].last_name + "</td>" + "<td>" + users[key].birthday + "</td>" + "<td>" + users[key].phone + "</td>" + "<td>" + users[key].email + "</td>" + "<td><div class='btn-group'><button type='button' onclick='editUser(" + users[key].id + ")' class='btn btn-primary'>Edit</button><button type='button' onclick='deleteUser(" + users[key].id + ")' class='btn btn-danger'>Delete</button></div></td>";
+	    tableRef.tBodies[0].appendChild(r)
+	}
+
+	function editUser(id) {
+	    changeInputvalues(users[id].first_name, users[id].last_name, users[id].birthday, users[id].phone, users[id].email);
+	    document.getElementById('submit_button').classList.remove('btn-primary');
+	    document.getElementById('submit_button').classList.add('btn-success');
+	    document.getElementById('submit_button').innerHTML = "Edit";
+	    document.getElementById('submit_button').setAttribute("uid", users[id].id);
+
+	}
+
+	function deleteUser(id) {
+	    delete users[id];
+	    localStorage.setItem('users', JSON.stringify(users));
+	    redrawTable();
+	}
+
+	function changeInputvalues(fname = null, lname = null, birthday = null, phone = null, email = null) {
+	    document.getElementById('fname').value = fname;
+	    document.getElementById('lname').value = lname;
+	    document.getElementById('birthday').value = birthday;
+	    document.getElementById('phone').value = phone;
+	    document.getElementById('email').value = email;
+	}
+
+	document.getElementById('submit_button').onclick = function() {
+		const form = document.getElementById('MainForm');
+		form.reportValidity()
+		if(form.checkValidity()){
+			var fname = document.getElementById('fname').value,
+				lname = document.getElementById('lname').value,
+				bday = document.getElementById('birthday').value,
+				phone = document.getElementById('phone').value,
+				email = document.getElementById('email').value;
+
+			if (this.innerHTML == "Submit") {
+				id = JSON.parse(localStorage.getItem('users')).length;
+				userData = {
+					'id': id,
+					'first_name': fname,
+					'last_name': lname,
+					'birthday': bday,
+					'phone': phone,
+					'email': email
+				};
+				users = JSON.parse(localStorage.getItem('users'));
+
+				users.push(userData);
+				localStorage.setItem('users', JSON.stringify(users));
+
+				addToTable(users, id)
+
+				document.getElementById('alert').style.display = "block";
+				document.getElementById('alert').classList.add('alert-success');
+				document.getElementById('alert').innerHTML = "Successfull registration!";
+
+				changeInputvalues();
+			} else {
+				var uid = this.getAttribute("uid")
+				users[uid].first_name = fname;
+				users[uid].last_name = lname;
+				users[uid].birthday = bday;
+				users[uid].phone = phone;
+				users[uid].email = email;
+				localStorage.setItem('users', JSON.stringify(users));
+				redrawTable();
+				changeInputvalues();
+				document.getElementById('submit_button').classList.remove('btn-success');
+				document.getElementById('submit_button').classList.add('btn-primary');
+				document.getElementById('submit_button').innerHTML = "Submit";
+				document.getElementById('submit_button').removeAttribute("uid");
+			}
+		}
+	}
+	</script>
+</body>
+</html>
